@@ -53,54 +53,60 @@
       </div>
     </div>
 
-    <BookingCalendar
-      :roomId="roomId"
-      :title="calendarTitle"
-      mode="admin"
-      :show-booking-info="true"
-      @dateStatusToggle="handleDateStatusToggle"
-    />
+    <div v-if="isLoading" class="flex justify-center my-8">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+    </div>
 
-    <div class="mt-6">
-      <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
-      <div v-if="bookings?.length === 0" class="text-gray-500">
-        No upcoming bookings for this room.
-      </div>
-      <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-          <li
-            v-for="booking in bookings"
-            :key="booking.id"
-            class="px-4 py-4 sm:px-6"
-          >
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-indigo-600 truncate">
-                  {{ booking.guestName }}
-                </p>
-                <p class="mt-1 text-sm text-gray-500">
-                  {{ formatDate(booking.checkIn) }} to
-                  {{ formatDate(booking.checkOut) }}
-                </p>
+    <div v-else>
+      <BookingCalendar
+        :roomId="roomId"
+        :title="calendarTitle"
+        mode="admin"
+        :show-booking-info="true"
+        @dateStatusToggle="handleDateStatusToggle"
+      />
+
+      <div class="mt-6">
+        <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
+        <div v-if="roomBookings.length === 0" class="text-gray-500">
+          No upcoming bookings for this room.
+        </div>
+        <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul class="divide-y divide-gray-200">
+            <li
+              v-for="booking in roomBookings"
+              :key="booking.id"
+              class="px-4 py-4 sm:px-6"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-indigo-600 truncate">
+                    {{ booking.guestName }}
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ formatDate(booking.checkIn) }} to
+                    {{ formatDate(booking.checkOut) }}
+                  </p>
+                </div>
+                <div class="ml-2 flex-shrink-0 flex">
+                  <p
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="bookingStatusClass(booking.status)"
+                  >
+                    {{ booking.status }}
+                  </p>
+                </div>
               </div>
-              <div class="ml-2 flex-shrink-0 flex">
-                <p
-                  class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                  :class="bookingStatusClass(booking.status)"
-                >
-                  {{ booking.status }}
-                </p>
-              </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import type { DateStatus } from "~/types";
 import BookingCalendar from "../calendar/BookingCalendar.vue";
 
@@ -110,6 +116,7 @@ const props = defineProps<{
 }>();
 
 const { bookings, fetchBookings } = useBookings();
+const { roomBookings, init, isLoading } = useCalendar(props.roomId);
 
 const calendarTitle = computed(() => {
   return props.roomName
@@ -119,7 +126,15 @@ const calendarTitle = computed(() => {
 
 onMounted(async () => {
   await fetchBookings();
+  await init();
 });
+
+// Watch for roomId changes and reinitialize
+watch(() => props.roomId, async (newRoomId, oldRoomId) => {
+  if (newRoomId !== oldRoomId) {
+    await init();
+  }
+}, { immediate: false });
 
 const handleDateStatusToggle = (date: Date) => {
   // This function is called when a date status is toggled in the calendar
@@ -148,3 +163,4 @@ const bookingStatusClass = (status: string): string => {
   }
 };
 </script>
+

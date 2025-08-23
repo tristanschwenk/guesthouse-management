@@ -6,10 +6,12 @@ export const useCalendar = (roomId: string) => {
   const { bookings, fetchBookings, getBookingsByRoom } = useBookings();
   const disabledDates = ref<Date[]>([]);
   const roomBookings = computed(() => getBookingsByRoom(roomId).value);
+  const isLoading = ref(true);
 
   // Initialize with some mock disabled dates
   const initMockDisabledDates = () => {
     const today = new Date();
+    disabledDates.value = [];
 
     // Disable some random dates
     for (let i = 0; i < 5; i++) {
@@ -22,6 +24,8 @@ export const useCalendar = (roomId: string) => {
 
   // Get the status of a specific date
   const getDateStatus = (date: Date): DateStatus => {
+    if (!date) return DateStatus.OPEN;
+    
     // Check if date is manually disabled
     if (disabledDates.value.some((d) => isSameDay(d, date))) {
       return DateStatus.CLOSE;
@@ -29,18 +33,21 @@ export const useCalendar = (roomId: string) => {
 
     // Check if date is part of a booking
     for (const booking of roomBookings.value) {
+      const checkIn = new Date(booking.checkIn);
+      const checkOut = new Date(booking.checkOut);
+      
       // Check if it's the check-in date (OPEN_CLOSE)
-      if (isSameDay(booking.checkIn, date)) {
+      if (isSameDay(checkIn, date)) {
         return DateStatus.OPEN_CLOSE;
       }
 
       // Check if it's the check-out date (CLOSE_OPEN)
-      if (isSameDay(booking.checkOut, date)) {
+      if (isSameDay(checkOut, date)) {
         return DateStatus.CLOSE_OPEN;
       }
 
       // Check if it's between check-in and check-out (CLOSE)
-      if (isDateBetween(date, booking.checkIn, booking.checkOut)) {
+      if (isDateBetween(date, checkIn, checkOut)) {
         return DateStatus.CLOSE;
       }
     }
@@ -60,10 +67,13 @@ export const useCalendar = (roomId: string) => {
 
       // Find booking for this date if it exists
       const booking = roomBookings.value.find(
-        (b) =>
-          isSameDay(b.checkIn, date) ||
-          isSameDay(b.checkOut, date) ||
-          isDateBetween(date, b.checkIn, b.checkOut)
+        (b) => {
+          const checkIn = new Date(b.checkIn);
+          const checkOut = new Date(b.checkOut);
+          return isSameDay(checkIn, date) ||
+            isSameDay(checkOut, date) ||
+            isDateBetween(date, checkIn, checkOut);
+        }
       );
 
       days.push({
@@ -101,6 +111,8 @@ export const useCalendar = (roomId: string) => {
 
   // Helper function to check if two dates are the same day
   function isSameDay(date1: Date, date2: Date): boolean {
+    if (!date1 || !date2) return false;
+    
     return (
       date1.getFullYear() === date2.getFullYear() &&
       date1.getMonth() === date2.getMonth() &&
@@ -110,13 +122,21 @@ export const useCalendar = (roomId: string) => {
 
   // Helper function to check if a date is between two dates
   function isDateBetween(date: Date, start: Date, end: Date): boolean {
-    return date > start && date < end;
+    if (!date || !start || !end) return false;
+    
+    const dateTime = date.getTime();
+    const startTime = start.getTime();
+    const endTime = end.getTime();
+    
+    return dateTime > startTime && dateTime < endTime;
   }
 
   // Initialize
   const init = async () => {
+    isLoading.value = true;
     await fetchBookings();
     initMockDisabledDates();
+    isLoading.value = false;
   };
 
   return {
@@ -128,5 +148,7 @@ export const useCalendar = (roomId: string) => {
     enableDate,
     toggleDateStatus,
     init,
+    isLoading,
   };
 };
+

@@ -29,8 +29,13 @@
       :disabled-dates="disabledDates"
       @dayclick="onDayClick"
       is-expanded
+      :masks="{
+        title: 'MMMM YYYY',
+        weekdays: 'WWW',
+        navMonths: 'MMM',
+      }"
     >
-      <template #day-content="{ day, attributes }">
+      <template #day-content="{ day }">
         <DateCell
           :date="day.date"
           :status="getDayStatus(day.date)"
@@ -43,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import type { DateStatus, Booking } from "~/types";
 
 const props = defineProps<{
@@ -65,11 +70,20 @@ const { disabledDates, roomBookings, getDateStatus, toggleDateStatus, init } =
   useCalendar(props.roomId);
 
 const selectedDatesInternal = ref<Date[]>(props.selectedDates || []);
+const isInitialized = ref(false);
 
 // Initialize calendar data
 onMounted(async () => {
   await init();
+  isInitialized.value = true;
 });
+
+// Watch for roomId changes and reinitialize
+watch(() => props.roomId, async (newRoomId, oldRoomId) => {
+  if (newRoomId !== oldRoomId) {
+    await init();
+  }
+}, { immediate: false });
 
 // Get the status for a specific day
 const getDayStatus = (date: Date): DateStatus => {
@@ -78,40 +92,49 @@ const getDayStatus = (date: Date): DateStatus => {
 
 // Get booking for a specific day if it exists
 const getDayBooking = (date: Date): Booking | undefined => {
+  if (!isInitialized.value || !roomBookings.value) return undefined;
+  
   return roomBookings.value.find(
     (booking) =>
-      isSameDay(booking.checkIn, date) ||
-      isSameDay(booking.checkOut, date) ||
-      isDateBetween(date, booking.checkIn, booking.checkOut)
+      isSameDay(new Date(booking.checkIn), date) ||
+      isSameDay(new Date(booking.checkOut), date) ||
+      isDateBetween(date, new Date(booking.checkIn), new Date(booking.checkOut))
   );
 };
 
 // Calendar attributes for v-calendar
 const calendarAttributes = computed(() => {
+  if (!isInitialized.value) return [];
+  
   const attributes = [];
 
   // Add attributes for each date status
   for (const booking of roomBookings.value) {
+    const checkIn = new Date(booking.checkIn);
+    const checkOut = new Date(booking.checkOut);
+    
     // Check-in date (OPEN_CLOSE)
     attributes.push({
-      dates: booking.checkIn,
+      dates: checkIn,
       class: "date-open-close",
     });
 
     // Check-out date (CLOSE_OPEN)
     attributes.push({
-      dates: booking.checkOut,
+      dates: checkOut,
       class: "date-close-open",
     });
 
     // Dates between check-in and check-out (CLOSE)
-    attributes.push({
-      dates: {
-        start: new Date(booking.checkIn.getTime() + 86400000),
-        end: new Date(booking.checkOut.getTime() - 86400000),
-      },
-      class: "date-close",
-    });
+    if (checkOut.getTime() - checkIn.getTime() > 86400000) {
+      attributes.push({
+        dates: {
+          start: new Date(checkIn.getTime() + 86400000),
+          end: new Date(checkOut.getTime() - 86400000),
+        },
+        class: "date-close",
+      });
+    }
   }
 
   // Add attributes for manually disabled dates
@@ -184,8 +207,19 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
   border: 1px solid #e5e7eb;
 }
 
+.booking-calendar :deep(.vc-day) {
+  min-height: 40px;
+  position: relative;
+}
+
+.booking-calendar :deep(.vc-day-content) {
+  width: 100%;
+  height: 100%;
+}
+
 .booking-calendar :deep(.selected-date) {
   background-color: rgba(79, 70, 229, 0.2);
   border: 2px solid #4f46e5;
 }
 </style>
+

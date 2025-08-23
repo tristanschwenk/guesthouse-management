@@ -46,6 +46,8 @@ const dateStatusClass = computed(() => {
 .date-cell {
   position: relative;
   min-height: 40px;
+  width: 100%;
+  height: 100%;
 }
 
 .booking-info {
@@ -54,3 +56,4 @@ const dateStatusClass = computed(() => {
   text-align: center;
 }
 </style>
+
