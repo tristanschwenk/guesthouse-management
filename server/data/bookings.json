@@ -1,0 +1,36 @@
+[
+  {
+    "id": "1",
+    "roomId": "1",
+    "guestName": "John Doe",
+    "guestEmail": "john@example.com",
+    "checkIn": "2025-09-01T00:00:00.000Z",
+    "checkOut": "2025-09-05T00:00:00.000Z",
+    "totalPrice": 600,
+    "status": "confirmed",
+    "createdAt": "2025-08-15T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "roomId": "2",
+    "guestName": "Jane Smith",
+    "guestEmail": "jane@example.com",
+    "checkIn": "2025-09-10T00:00:00.000Z",
+    "checkOut": "2025-09-15T00:00:00.000Z",
+    "totalPrice": 1250,
+    "status": "confirmed",
+    "createdAt": "2025-08-20T00:00:00.000Z"
+  },
+  {
+    "id": "3",
+    "roomId": "3",
+    "guestName": "Bob Johnson",
+    "guestEmail": "bob@example.com",
+    "checkIn": "2025-09-20T00:00:00.000Z",
+    "checkOut": "2025-09-22T00:00:00.000Z",
+    "totalPrice": 400,
+    "status": "pending",
+    "createdAt": "2025-08-22T00:00:00.000Z"
+  }
+]
+

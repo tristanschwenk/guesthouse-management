@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .date-open {
+    @apply bg-open text-white;
+  }
+  .date-close {
+    @apply bg-close text-white;
+  }
+  .date-open-close {
+    @apply bg-open-close text-white;
+  }
+  .date-close-open {
+    @apply bg-close-open text-white;
+  }
+}
+
+.v-calendar .vc-day {
+  min-height: 40px;
+  position: relative;
+}
+
+.v-calendar .vc-day-content {
+  width: 100%;
+  height: 100%;
+}
+
