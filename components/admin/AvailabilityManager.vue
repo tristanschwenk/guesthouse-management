@@ -63,13 +63,13 @@
 
     <div class="mt-6">
       <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
-      <div v-if="roomBookings.length === 0" class="text-gray-500">
+      <div v-if="bookings?.length === 0" class="text-gray-500">
         No upcoming bookings for this room.
       </div>
       <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
         <ul class="divide-y divide-gray-200">
           <li
-            v-for="booking in roomBookings"
+            v-for="booking in bookings"
             :key="booking.id"
             class="px-4 py-4 sm:px-6"
           >
@@ -102,13 +102,14 @@
 <script setup lang="ts">
 import { computed, onMounted } from "vue";
 import type { DateStatus } from "~/types";
+import BookingCalendar from "../calendar/BookingCalendar.vue";
 
 const props = defineProps<{
   roomId: string;
   roomName?: string;
 }>();
 
-const { roomBookings, fetchBookings } = useBookings();
+const { bookings, fetchBookings } = useBookings();
 
 const calendarTitle = computed(() => {
   return props.roomName

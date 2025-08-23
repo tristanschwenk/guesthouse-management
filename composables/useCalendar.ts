@@ -1,5 +1,6 @@
 import { ref, computed } from "vue";
-import type { DateStatus, Booking, CalendarDay } from "~/types";
+import type { Booking, CalendarDay } from "~/types";
+import { DateStatus } from "~/types";
 
 export const useCalendar = (roomId: string) => {
   const { bookings, fetchBookings, getBookingsByRoom } = useBookings();
