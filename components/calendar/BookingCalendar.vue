@@ -37,8 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch, inject } from "vue";
 import type { DateStatus, Booking } from "~/types";
+import { DateStatus as DateStatusEnum } from "~/types";
 
 const props = defineProps<{
   roomId: string;
@@ -213,12 +214,49 @@ const calendarAttributes = computed(() => {
 
 // Handle day click
 const onDayClick = (day: { date: Date }) => {
+  // Check if the date is disabled (booked or manually disabled)
+  const dateStatus = getDateStatus(day.date);
+  if (dateStatus === DateStatusEnum.CLOSE) {
+    // Don't allow selection of disabled dates
+    return;
+  }
+
   if (props.mode === "admin") {
-    // In admin mode, toggle date status
-    toggleDateStatus(day.date);
-    emit("dateStatusToggle", day.date);
+    // Get parent component's selection mode if available
+    const parentSelectionMode = inject('selectionMode', ref(false));
+    
+    if (parentSelectionMode.value) {
+      // In selection mode, select/deselect date
+      const index = selectedDatesInternal.value.findIndex((d) =>
+        isSameDay(d, day.date)
+      );
+
+      if (index !== -1) {
+        // Date is already selected, deselect it
+        selectedDatesInternal.value.splice(index, 1);
+      } else {
+        // Date is not selected, select it
+        if (selectedDatesInternal.value.length >= 2) {
+          // If already have 2 dates, reset selection
+          selectedDatesInternal.value = [day.date];
+        } else {
+          // Add to selection
+          selectedDatesInternal.value.push(day.date);
+        }
+      }
+
+      // Sort selected dates
+      selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime());
+
+      // Emit selected dates
+      emit("update:selectedDates", selectedDatesInternal.value);
+    } else {
+      // In toggle mode, toggle date status
+      toggleDateStatus(day.date);
+      emit("dateStatusToggle", day.date);
+    }
   } else {
-    // In booking mode, select/deselect date
+    // In booking mode (client), select/deselect date
     const index = selectedDatesInternal.value.findIndex((d) =>
       isSameDay(d, day.date)
     );

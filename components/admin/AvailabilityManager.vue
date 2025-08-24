@@ -4,7 +4,7 @@
       <h2 class="text-lg font-semibold mb-2">Room Availability</h2>
       <p class="text-gray-600">
         Use the calendar below to manage room availability. Click on dates to
-        toggle their status.
+        toggle their status or select a date range to create a booking.
       </p>
 
       <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
@@ -54,13 +54,43 @@
     </div>
 
     <div v-else>
+      <div class="mb-4 flex justify-between items-center">
+        <div>
+          <span class="text-sm text-gray-500">
+            {{ selectionMode ? 'Selection mode: Click two dates to select a range' : 'Toggle mode: Click to toggle date availability' }}
+          </span>
+        </div>
+        <button
+          @click="toggleSelectionMode"
+          class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          {{ selectionMode ? 'Switch to Toggle Mode' : 'Switch to Selection Mode' }}
+        </button>
+      </div>
+
       <BookingCalendar
         :roomId="roomId"
         :title="calendarTitle"
         mode="admin"
         :show-booking-info="true"
+        v-model:selectedDates="selectedDates"
         @dateStatusToggle="handleDateStatusToggle"
       />
+
+      <div v-if="selectedDates.length === 2" class="mt-4 p-4 bg-indigo-50 rounded-md">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-medium text-indigo-800">Selected Range: {{ formatDate(selectedDates[0]) }} to {{ formatDate(selectedDates[1]) }}</p>
+            <p class="text-sm text-indigo-600">{{ calculateNights() }} nights</p>
+          </div>
+          <button
+            @click="openCreateBookingModal"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Create Booking
+          </button>
+        </div>
+      </div>
 
       <div class="mt-6">
         <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
@@ -98,26 +128,44 @@
         </div>
       </div>
     </div>
+
+    <!-- Create Booking Modal -->
+    <CreateBookingModal
+      :is-open="isModalOpen"
+      :room-id="roomId"
+      :selected-dates="selectedDates"
+      @close="closeCreateBookingModal"
+      @submit="handleCreateBooking"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch, provide } from "vue";
 import BookingCalendar from "../calendar/BookingCalendar.vue";
+import CreateBookingModal from "./CreateBookingModal.vue";
+import type { Booking } from "~/types";
 
 const props = defineProps<{
   roomId: string;
   roomName?: string;
 }>();
 
-const { bookings, fetchBookings } = useBookings();
-const { roomBookings, init, isLoading } = useCalendar(props.roomId);
+const { bookings, fetchBookings, addBooking } = useBookings();
+const { roomBookings, init, isLoading, disableDate } = useCalendar(props.roomId);
 
 const calendarTitle = computed(() => {
   return props.roomName
     ? `${props.roomName} - Availability Calendar`
     : "Room Availability Calendar";
 });
+
+const selectedDates = ref<Date[]>([]);
+const selectionMode = ref(false);
+const isModalOpen = ref(false);
+
+// Provide selection mode to child components
+provide('selectionMode', selectionMode);
 
 onMounted(async () => {
   await fetchBookings();
@@ -131,10 +179,63 @@ watch(() => props.roomId, async (newRoomId, oldRoomId) => {
   }
 }, { immediate: false });
 
+const toggleSelectionMode = () => {
+  selectionMode.value = !selectionMode.value;
+  selectedDates.value = [];
+};
+
 const handleDateStatusToggle = (date: Date) => {
-  // This function is called when a date status is toggled in the calendar
-  console.log("Date status toggled:", date);
-  // In a real app, you would save this change to the backend
+  if (!selectionMode.value) {
+    // In toggle mode, toggle date status
+    console.log("Date status toggled:", date);
+    // In a real app, you would save this change to the backend
+  }
+};
+
+const openCreateBookingModal = () => {
+  if (selectedDates.value.length === 2) {
+    isModalOpen.value = true;
+  }
+};
+
+const closeCreateBookingModal = () => {
+  isModalOpen.value = false;
+};
+
+const handleCreateBooking = (bookingData: Partial<Booking> & { source: string, sourceDetails?: string }) => {
+  // Add the booking
+  const newBooking = addBooking(bookingData);
+  
+  // If source is 'disabled', also mark the dates as disabled
+  if (bookingData.source === 'disabled') {
+    const startDate = new Date(bookingData.checkIn as Date);
+    const endDate = new Date(bookingData.checkOut as Date);
+    
+    // Disable all dates in the range
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      disableDate(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+  
+  // Reset selection
+  selectedDates.value = [];
+  
+  // Refresh the calendar
+  init();
+};
+
+const calculateNights = (): number => {
+  if (selectedDates.value.length !== 2) return 0;
+
+  const start = new Date(selectedDates.value[0]);
+  const end = new Date(selectedDates.value[1]);
+
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
 };
 
 const formatDate = (date: Date): string => {
@@ -158,4 +259,3 @@ const bookingStatusClass = (status: string): string => {
   }
 };
 </script>
-
