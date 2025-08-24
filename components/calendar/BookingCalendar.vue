@@ -19,6 +19,7 @@
     </div>
 
     <v-calendar
+      class="w-full"
       :attributes="calendarAttributes"
       :min-date="minDate"
       :max-date="maxDate"
@@ -302,6 +303,7 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
 .booking-calendar :deep(.vc-container) {
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
+  width: 100%;
 }
 
 .booking-calendar :deep(.vc-day) {

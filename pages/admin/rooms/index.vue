@@ -198,6 +198,7 @@
         <div
           class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
+          @click="closeRoomForm"
         ></div>
         <span
           class="hidden sm:inline-block sm:align-middle sm:h-screen"
@@ -244,6 +245,7 @@
         <div
           class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
+          @click="showDeleteConfirmation = false"
         ></div>
         <span
           class="hidden sm:inline-block sm:align-middle sm:h-screen"
@@ -315,6 +317,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import RoomForm from "~/components/admin/RoomForm.vue";
 import type { Room } from "~/types";
 
 definePageMeta({
