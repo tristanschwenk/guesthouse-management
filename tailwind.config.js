@@ -11,10 +11,10 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        'open': '#4ade80', // Green for available dates
-        'close': '#f87171', // Red for booked dates
-        'open-close': '#fbbf24', // Yellow for start of reservation
-        'close-open': '#60a5fa', // Blue for end of reservation
+        'open': '#22c55e', // Green-500 for available dates
+        'close': '#ef4444', // Red-500 for booked dates
+        'open-close': '#fb923c', // Orange-400 for check-in/out days
+        'close-open': '#fb923c', // Same orange for consistency
       }
     },
   },
