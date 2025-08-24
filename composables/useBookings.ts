@@ -1,13 +1,15 @@
 import { ref, computed } from "vue";
-import type { Booking, DateStatus } from "~/types";
+import type { Booking } from "~/types";
 
 export const useBookings = () => {
   const bookings = ref<Booking[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const storage = useStorage();
+  const STORAGE_KEY = 'guesthouse_bookings';
 
-  // Mock data for development
-  const initMockBookings = () => {
+  // Initialize with default bookings if none exist in storage
+  const initDefaultBookings = () => {
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -18,7 +20,7 @@ export const useBookings = () => {
     const nextWeekPlusOne = new Date(nextWeek);
     nextWeekPlusOne.setDate(nextWeekPlusOne.getDate() + 1);
 
-    bookings.value = [
+    const defaultBookings: Booking[] = [
       {
         id: "1",
         roomId: "1",
@@ -42,6 +44,23 @@ export const useBookings = () => {
         createdAt: today,
       },
     ];
+    
+    return defaultBookings;
+  };
+
+  // Helper function to convert date strings back to Date objects
+  const parseDates = (bookingsData: any[]): Booking[] => {
+    return bookingsData.map(booking => ({
+      ...booking,
+      checkIn: new Date(booking.checkIn),
+      checkOut: new Date(booking.checkOut),
+      createdAt: new Date(booking.createdAt)
+    }));
+  };
+
+  // Save bookings to localStorage
+  const saveBookings = () => {
+    storage.setItem(STORAGE_KEY, bookings.value);
   };
 
   const fetchBookings = async () => {
@@ -49,9 +68,17 @@ export const useBookings = () => {
     error.value = null;
 
     try {
-      // In a real app, this would be an API call
-      // For now, we'll use mock data
-      initMockBookings();
+      // Get bookings from localStorage or use default if none exist
+      const storedBookings = storage.getItem<any[]>(STORAGE_KEY, []);
+      
+      if (storedBookings.length === 0) {
+        // Initialize with default bookings if storage is empty
+        bookings.value = initDefaultBookings();
+        saveBookings(); // Save default bookings to storage
+      } else {
+        // Parse dates from stored bookings
+        bookings.value = parseDates(storedBookings);
+      }
     } catch (err) {
       error.value = "Failed to fetch bookings";
       console.error(err);
@@ -73,6 +100,7 @@ export const useBookings = () => {
       createdAt: new Date(),
     };
     bookings.value.push(newBooking);
+    saveBookings(); // Save to localStorage
     return newBooking;
   };
 
@@ -80,6 +108,7 @@ export const useBookings = () => {
     const index = bookings.value.findIndex((booking) => booking.id === id);
     if (index !== -1) {
       bookings.value[index] = { ...bookings.value[index], ...updates };
+      saveBookings(); // Save to localStorage
       return bookings.value[index];
     }
     return null;
@@ -89,6 +118,7 @@ export const useBookings = () => {
     const index = bookings.value.findIndex((booking) => booking.id === id);
     if (index !== -1) {
       bookings.value.splice(index, 1);
+      saveBookings(); // Save to localStorage
       return true;
     }
     return false;
@@ -105,3 +135,4 @@ export const useBookings = () => {
     deleteBooking,
   };
 };
+

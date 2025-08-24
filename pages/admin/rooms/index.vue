@@ -198,6 +198,7 @@
         <div
           class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
+          @click="closeRoomForm"
         ></div>
         <span
           class="hidden sm:inline-block sm:align-middle sm:h-screen"
@@ -244,6 +245,7 @@
         <div
           class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
           aria-hidden="true"
+          @click="showDeleteConfirmation = false"
         ></div>
         <span
           class="hidden sm:inline-block sm:align-middle sm:h-screen"
@@ -376,3 +378,4 @@ const handleRoomFormSubmit = (roomData: Omit<Room, "id">) => {
   closeRoomForm();
 };
 </script>
+

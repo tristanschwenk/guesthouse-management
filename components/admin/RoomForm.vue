@@ -38,7 +38,7 @@
         <input
           type="number"
           id="price"
-          v-model="form.price"
+          v-model.number="form.price"
           required
           min="0"
           class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -53,7 +53,7 @@
       <input
         type="number"
         id="capacity"
-        v-model="form.capacity"
+        v-model.number="form.capacity"
         required
         min="1"
         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
@@ -178,7 +178,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import type { Room } from "~/types";
 
 const props = defineProps<{
@@ -211,6 +211,7 @@ const form = reactive<Omit<Room, "id">>({
   amenities: [],
 });
 
+// Initialize form with room data if provided
 onMounted(() => {
   if (props.room) {
     form.name = props.room.name;
@@ -221,6 +222,18 @@ onMounted(() => {
     form.amenities = [...props.room.amenities];
   }
 });
+
+// Watch for changes in props.room to update form
+watch(() => props.room, (newRoom) => {
+  if (newRoom) {
+    form.name = newRoom.name;
+    form.description = newRoom.description;
+    form.price = newRoom.price;
+    form.images = [...newRoom.images];
+    form.capacity = newRoom.capacity;
+    form.amenities = [...newRoom.amenities];
+  }
+}, { deep: true });
 
 const handleFileUpload = (event: Event) => {
   const input = event.target as HTMLInputElement;
@@ -245,6 +258,14 @@ const removeImage = (index: number) => {
 };
 
 const submitForm = () => {
-  emit("submit", { ...form });
+  // Ensure price and capacity are numbers
+  const formData = {
+    ...form,
+    price: Number(form.price),
+    capacity: Number(form.capacity)
+  };
+  
+  emit("submit", formData);
 };
 </script>
+
