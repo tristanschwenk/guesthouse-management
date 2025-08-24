@@ -91,45 +91,45 @@ watch(
 // Selection attribute for date range
 const selectAttribute = computed(() => {
   if (selectedDatesInternal.value.length === 0) return null;
-  
+
   if (selectedDatesInternal.value.length === 1) {
     return {
-      key: 'selection',
+      key: "selection",
       dates: selectedDatesInternal.value[0],
       highlight: {
-        backgroundColor: '#4f46e5',
-        borderRadius: '0',
-        borderWidth: '2px',
-        borderColor: '#4f46e5',
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
+        borderWidth: "2px",
+        borderColor: "#4f46e5",
       },
       contentStyle: {
-        color: 'white',
+        color: "white",
       },
     };
   }
-  
+
   return {
-    key: 'selection',
+    key: "selection",
     dates: {
       start: selectedDatesInternal.value[0],
       end: selectedDatesInternal.value[1],
     },
     highlight: {
       startStyle: {
-        backgroundColor: '#4f46e5',
-        borderRadius: '0',
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
       },
       endStyle: {
-        backgroundColor: '#4f46e5',
-        borderRadius: '0',
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
       },
       baseStyle: {
-        backgroundColor: 'rgba(79, 70, 229, 0.2)',
-        borderRadius: '0',
+        backgroundColor: "rgba(79, 70, 229, 0.2)",
+        borderRadius: "0",
       },
     },
     contentStyle: {
-      color: 'white',
+      color: "white",
     },
   };
 });
@@ -150,12 +150,12 @@ const calendarAttributes = computed(() => {
       key: `checkin-${booking.id}`,
       dates: checkIn,
       highlight: {
-        backgroundColor: '#fb923c', // orange-400
-        borderRadius: '0',
+        backgroundColor: "#fb923c", // orange-400
+        borderRadius: "0",
       },
       popover: {
         label: `Check-in: ${booking.guestName}`,
-        visibility: props.showBookingInfo ? 'hover' : 'hidden',
+        visibility: props.showBookingInfo ? "hover" : "hidden",
       },
     });
 
@@ -163,12 +163,12 @@ const calendarAttributes = computed(() => {
       key: `checkout-${booking.id}`,
       dates: checkOut,
       highlight: {
-        backgroundColor: '#fb923c', // orange-400
-        borderRadius: '0',
+        backgroundColor: "#fb923c", // orange-400
+        borderRadius: "0",
       },
       popover: {
         label: `Check-out: ${booking.guestName}`,
-        visibility: props.showBookingInfo ? 'hover' : 'hidden',
+        visibility: props.showBookingInfo ? "hover" : "hidden",
       },
     });
 
@@ -181,12 +181,12 @@ const calendarAttributes = computed(() => {
           end: new Date(checkOut.getTime() - 86400000),
         },
         highlight: {
-          backgroundColor: '#ef4444', // red-500
-          borderRadius: '0',
+          backgroundColor: "#ef4444", // red-500
+          borderRadius: "0",
         },
         popover: {
           label: `Booked: ${booking.guestName}`,
-          visibility: props.showBookingInfo ? 'hover' : 'hidden',
+          visibility: props.showBookingInfo ? "hover" : "hidden",
         },
       });
     }
@@ -198,12 +198,12 @@ const calendarAttributes = computed(() => {
       key: `disabled-${date.getTime()}`,
       dates: date,
       highlight: {
-        backgroundColor: '#ef4444', // red-500
-        borderRadius: '0',
+        backgroundColor: "#ef4444", // red-500
+        borderRadius: "0",
       },
       popover: {
-        label: 'Not available',
-        visibility: 'hover',
+        label: "Not available",
+        visibility: "hover",
       },
     });
   }
@@ -262,8 +262,6 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
 
 <style scoped>
 .booking-calendar :deep(.vc-container) {
-  --vc-accent-600: theme("colors.indigo.600");
-  --vc-accent-500: theme("colors.indigo.500");
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
 }
@@ -277,11 +275,4 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
   width: 100%;
   height: 100%;
 }
-
-/* Default available date style - green */
-.booking-calendar :deep(.vc-day:not(.vc-disabled):not(.vc-day-box-center-highlight):not(.vc-day-box-start-highlight):not(.vc-day-box-end-highlight)) {
-  background-color: #22c55e; /* green-500 */
-  color: white;
-}
 </style>
-
