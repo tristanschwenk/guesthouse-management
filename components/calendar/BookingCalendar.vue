@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, inject } from "vue";
+import { ref, computed, onMounted, watch, inject, type Ref } from "vue";
 import type { DateStatus, Booking } from "~/types";
 import { DateStatus as DateStatusEnum } from "~/types";
 
@@ -223,10 +223,12 @@ const onDayClick = (day: { date: Date }) => {
   }
 
   if (props.mode === "admin") {
-    // Get parent component's selection mode if available
-    const parentSelectionMode = inject('selectionMode', ref(false));
+    // Check if we're in selection mode
+    // Use a default value of false if the injection key is not provided
+    const parentSelectionMode = inject<Ref<boolean>>('selectionMode', null);
+    const isSelectionMode = parentSelectionMode ? parentSelectionMode.value : false;
     
-    if (parentSelectionMode.value) {
+    if (isSelectionMode) {
       // In selection mode, select/deselect date
       const index = selectedDatesInternal.value.findIndex((d) =>
         isSameDay(d, day.date)
