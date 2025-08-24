@@ -317,6 +317,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
+import RoomForm from "~/components/admin/RoomForm.vue";
 import type { Room } from "~/types";
 
 definePageMeta({
@@ -378,4 +379,3 @@ const handleRoomFormSubmit = (roomData: Omit<Room, "id">) => {
   closeRoomForm();
 };
 </script>
-

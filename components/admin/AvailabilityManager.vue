@@ -35,8 +35,8 @@
                   booking
                 </li>
                 <li>
-                  <span class="font-semibold">Red:</span> Not available
-                  for booking
+                  <span class="font-semibold">Red:</span> Not available for
+                  booking
                 </li>
                 <li>
                   <span class="font-semibold">Orange:</span>
@@ -50,11 +50,14 @@
     </div>
 
     <div v-if="isLoading" class="flex justify-center my-8">
-      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"
+      ></div>
     </div>
 
     <div v-else>
       <BookingCalendar
+        class="w-full"
         :roomId="roomId"
         :title="calendarTitle"
         mode="admin"
@@ -125,11 +128,15 @@ onMounted(async () => {
 });
 
 // Watch for roomId changes and reinitialize
-watch(() => props.roomId, async (newRoomId, oldRoomId) => {
-  if (newRoomId !== oldRoomId) {
-    await init();
-  }
-}, { immediate: false });
+watch(
+  () => props.roomId,
+  async (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      await init();
+    }
+  },
+  { immediate: false }
+);
 
 const handleDateStatusToggle = (date: Date) => {
   // This function is called when a date status is toggled in the calendar
@@ -158,4 +165,3 @@ const bookingStatusClass = (status: string): string => {
   }
 };
 </script>
-
