@@ -50,6 +50,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import type { DateStatus, Booking } from "~/types";
+import DateCell from "./DateCell.vue";
 
 const props = defineProps<{
   roomId: string;
@@ -79,11 +80,15 @@ onMounted(async () => {
 });
 
 // Watch for roomId changes and reinitialize
-watch(() => props.roomId, async (newRoomId, oldRoomId) => {
-  if (newRoomId !== oldRoomId) {
-    await init();
-  }
-}, { immediate: false });
+watch(
+  () => props.roomId,
+  async (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      await init();
+    }
+  },
+  { immediate: false }
+);
 
 // Get the status for a specific day
 const getDayStatus = (date: Date): DateStatus => {
@@ -93,7 +98,7 @@ const getDayStatus = (date: Date): DateStatus => {
 // Get booking for a specific day if it exists
 const getDayBooking = (date: Date): Booking | undefined => {
   if (!isInitialized.value || !roomBookings.value) return undefined;
-  
+
   return roomBookings.value.find(
     (booking) =>
       isSameDay(new Date(booking.checkIn), date) ||
@@ -105,14 +110,14 @@ const getDayBooking = (date: Date): Booking | undefined => {
 // Calendar attributes for v-calendar
 const calendarAttributes = computed(() => {
   if (!isInitialized.value) return [];
-  
+
   const attributes = [];
 
   // Add attributes for each date status
   for (const booking of roomBookings.value) {
     const checkIn = new Date(booking.checkIn);
     const checkOut = new Date(booking.checkOut);
-    
+
     // Check-in date (OPEN_CLOSE)
     attributes.push({
       dates: checkIn,
@@ -222,4 +227,3 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
   border: 2px solid #4f46e5;
 }
 </style>
-

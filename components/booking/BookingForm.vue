@@ -226,6 +226,7 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import type { Room } from "~/types";
+import BookingCalendar from "../calendar/BookingCalendar.vue";
 
 const props = defineProps<{
   roomId: string;
