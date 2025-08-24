@@ -31,20 +31,16 @@
             <div class="mt-2 text-sm text-yellow-700">
               <ul class="list-disc pl-5 space-y-1">
                 <li>
-                  <span class="font-semibold">Green (OPEN):</span> Available for
+                  <span class="font-semibold">Green:</span> Available for
                   booking
                 </li>
                 <li>
-                  <span class="font-semibold">Red (CLOSE):</span> Not available
+                  <span class="font-semibold">Red:</span> Not available
                   for booking
                 </li>
                 <li>
-                  <span class="font-semibold">Yellow (OPEN_CLOSE):</span>
-                  Check-in day (morning available, afternoon booked)
-                </li>
-                <li>
-                  <span class="font-semibold">Blue (CLOSE_OPEN):</span>
-                  Check-out day (morning booked, afternoon available)
+                  <span class="font-semibold">Orange:</span>
+                  Check-in or Check-out day
                 </li>
               </ul>
             </div>
@@ -107,7 +103,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
-import type { DateStatus } from "~/types";
 import BookingCalendar from "../calendar/BookingCalendar.vue";
 
 const props = defineProps<{

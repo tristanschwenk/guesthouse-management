@@ -15,6 +15,7 @@
         mode="booking"
         v-model:selectedDates="selectedDates"
         :min-date="today"
+        title="Select Check-in and Check-out Dates"
       />
 
       <div
@@ -224,7 +225,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { Room } from "~/types";
 import BookingCalendar from "../calendar/BookingCalendar.vue";
 
@@ -253,6 +254,11 @@ const guestInfo = ref({
 const roomPrice = computed(() => {
   return props.room?.price || 100; // Default price if room not provided
 });
+
+// Watch for changes in selectedDates
+watch(selectedDates, (newDates) => {
+  console.log('Selected dates changed:', newDates);
+}, { deep: true });
 
 const goToStep = (newStep: number) => {
   step.value = newStep;
@@ -303,3 +309,4 @@ const confirmBooking = () => {
   goToStep(4);
 };
 </script>
+
