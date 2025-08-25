@@ -20,6 +20,9 @@
               <NuxtLink to="/admin/bookings" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 Bookings
               </NuxtLink>
+              <NuxtLink to="/admin/customers" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Customers
+              </NuxtLink>
             </nav>
           </div>
           <div class="flex items-center">
@@ -38,4 +41,3 @@
     </main>
   </div>
 </template>
-

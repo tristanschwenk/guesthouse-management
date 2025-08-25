@@ -22,6 +22,7 @@ export const useBookings = () => {
       {
         id: "1",
         roomId: "1",
+        customerId: "1",
         guestName: "John Doe",
         guestEmail: "john@example.com",
         checkIn: tomorrow,
@@ -33,6 +34,7 @@ export const useBookings = () => {
       {
         id: "2",
         roomId: "2",
+        customerId: "2",
         guestName: "Jane Smith",
         guestEmail: "jane@example.com",
         checkIn: nextWeek,

@@ -1,0 +1,23 @@
+[
+  {
+    "id": "1",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "phone": "+1234567890",
+    "address": "123 Main St, Anytown, USA",
+    "company": "ABC Corp",
+    "notes": "Regular customer",
+    "createdAt": "2025-08-01T00:00:00.000Z"
+  },
+  {
+    "id": "2",
+    "name": "Jane Smith",
+    "email": "jane@example.com",
+    "phone": "+0987654321",
+    "address": "456 Oak Ave, Somewhere, USA",
+    "company": "XYZ Inc",
+    "notes": "Corporate account",
+    "createdAt": "2025-08-05T00:00:00.000Z"
+  }
+]
+

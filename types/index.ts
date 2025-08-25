@@ -20,9 +20,21 @@ export interface DateAvailability {
   status: DateStatus;
 }
 
+export interface Customer {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  company?: string;
+  notes?: string;
+  createdAt: Date;
+}
+
 export interface Booking {
   id: string;
   roomId: string;
+  customerId?: string;
   guestName: string;
   guestEmail: string;
   checkIn: Date;
@@ -37,4 +49,3 @@ export interface CalendarDay {
   status: DateStatus;
   booking?: Booking;
 }
-
