@@ -60,6 +60,7 @@ export const useBookings = () => {
 
   // Save bookings to localStorage
   const saveBookings = () => {
+    // Make sure we're saving the full array of bookings, not replacing it
     storage.setItem(STORAGE_KEY, bookings.value);
   };
 
@@ -135,4 +136,3 @@ export const useBookings = () => {
     deleteBooking,
   };
 };
-

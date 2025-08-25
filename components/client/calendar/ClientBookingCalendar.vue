@@ -45,26 +45,8 @@ const currentPage = ref(new Date());
 
 // Computed properties for v-calendar
 const calendarAttributes = computed(() => {
-  const attributes = [];
-  
-  // Add booking attributes
-  for (const booking of props.bookings) {
-    const checkInDate = new Date(booking.checkIn);
-    const checkOutDate = new Date(booking.checkOut);
-    
-    attributes.push({
-      highlight: {
-        color: 'red',
-        fillMode: 'solid',
-      },
-      dates: { start: checkInDate, end: checkOutDate },
-      popover: {
-        label: 'Not available',
-      },
-    });
-  }
-  
-  return attributes;
+  // We only need the selection attribute, disabled dates are handled by disabledDates prop
+  return [];
 });
 
 const disabledDates = computed(() => {

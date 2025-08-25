@@ -9,16 +9,18 @@
       @update:from-page="updatePage"
     />
 
-    <div v-if="isSelectionMode && selectedDates.length > 0" class="mt-4">
-      <p class="text-sm">
-        Selected: {{ formatDateRange(selectedDates) }}
-      </p>
-      <button 
-        @click="$emit('openBookingModal', selectedDates)" 
-        class="btn btn-primary btn-sm mt-2"
-      >
-        Create Booking
-      </button>
+    <div v-if="isSelectionMode && selectedDates.length > 0" class="mt-4 p-4 bg-indigo-50 rounded-md">
+      <div class="flex justify-between items-center">
+        <p class="text-sm font-medium text-indigo-800">
+          Selected: {{ formatDateRange(selectedDates) }}
+        </p>
+        <button 
+          @click="$emit('openBookingModal', selectedDates)" 
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          Create Booking
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -54,14 +56,60 @@ const calendarAttributes = computed(() => {
     const checkInDate = new Date(booking.checkIn);
     const checkOutDate = new Date(booking.checkOut);
     
+    // Determine color based on booking source
+    let color = 'blue'; // Default color for regular bookings
+    
+    if (booking.source) {
+      switch(booking.source) {
+        case 'booking.com':
+          color = 'green';
+          break;
+        case 'disabled':
+          color = 'red'; // Only use red for explicitly disabled dates
+          break;
+        case 'autre':
+          color = 'purple';
+          break;
+        default:
+          color = 'blue';
+      }
+    }
+    
+    // Add the main booking span
     attributes.push({
       highlight: {
-        color: 'red',
+        color: color,
         fillMode: 'solid',
       },
       dates: { start: checkInDate, end: checkOutDate },
       popover: {
-        label: `Booked: ${booking.guestName}`,
+        label: booking.source === 'disabled' 
+          ? 'Disabled date' 
+          : `Booked: ${booking.guestName}${booking.source ? ` (${booking.source})` : ''}`,
+      },
+    });
+    
+    // Add check-in indicator
+    attributes.push({
+      dot: {
+        color: 'green',
+        class: 'opacity-75',
+      },
+      dates: checkInDate,
+      popover: {
+        label: `Check-in: ${booking.guestName}`,
+      },
+    });
+    
+    // Add check-out indicator
+    attributes.push({
+      dot: {
+        color: 'orange',
+        class: 'opacity-75',
+      },
+      dates: checkOutDate,
+      popover: {
+        label: `Check-out: ${booking.guestName}`,
       },
     });
   }
