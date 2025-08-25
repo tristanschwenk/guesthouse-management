@@ -70,14 +70,12 @@
         </button>
       </div>
 
-      <BookingCalendar
+      <AdminBookingCalendar
         class="w-full"
-        :roomId="roomId"
-        :title="calendarTitle"
-        mode="admin"
-        :show-booking-info="true"
-        v-model:selectedDates="selectedDates"
-        @dateStatusToggle="handleDateStatusToggle"
+        :bookings="roomBookings"
+        :isSelectionMode="selectionMode"
+        @dateToggled="handleDateStatusToggle"
+        @openBookingModal="handleOpenBookingModal"
       />
 
       <div v-if="selectedDates.length === 2" class="mt-4 p-4 bg-indigo-50 rounded-md">
@@ -144,8 +142,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, provide } from "vue";
-import BookingCalendar from "../calendar/BookingCalendar.vue";
+import { computed, onMounted, ref, watch } from "vue";
+import AdminBookingCalendar from "./calendar/AdminBookingCalendar.vue";
 import CreateBookingModal from "./CreateBookingModal.vue";
 import type { Booking } from "~/types";
 
@@ -166,9 +164,6 @@ const calendarTitle = computed(() => {
 const selectedDates = ref<Date[]>([]);
 const selectionMode = ref(false);
 const isModalOpen = ref(false);
-
-// Provide selection mode to child components
-provide('selectionMode', selectionMode);
 
 onMounted(async () => {
   await fetchBookings();
@@ -192,10 +187,15 @@ const toggleSelectionMode = () => {
 };
 
 const handleDateStatusToggle = (date: Date) => {
-  if (!selectionMode.value) {
-    // In toggle mode, toggle date status
-    console.log("Date status toggled:", date);
-    // In a real app, you would save this change to the backend
+  // Toggle date status
+  console.log("Date status toggled:", date);
+  // In a real app, you would save this change to the backend
+};
+
+const handleOpenBookingModal = (dates: Date[]) => {
+  if (dates.length > 0) {
+    selectedDates.value = dates;
+    openCreateBookingModal();
   }
 };
 
