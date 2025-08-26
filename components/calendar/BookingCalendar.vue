@@ -65,15 +65,9 @@ const updateValue = (value: { start: Date; end: Date } | null) => {
   console.log(value);
   if (value) {
     dateRange.value = value;
+    emit("update:selectedDates", [value.start, value.end]);
   }
 }
-
-
-watchEffect(() => {
-    if (dateRange.value) {
-      console.log(dateRange.value);
-    }
-  })
 
 // Initialize calendar data
 onMounted(async () => {
@@ -101,139 +95,6 @@ watch(
     }
   }
 );
-
-// Selection attribute for date range
-const selectAttribute = computed(() => {
-  if (selectedDatesInternal.value.length === 0) return null;
-
-  if (selectedDatesInternal.value.length === 1) {
-    return {
-      key: "selection",
-      dates: selectedDatesInternal.value[0],
-      highlight: {
-        backgroundColor: "#4f46e5",
-        borderRadius: "0",
-        borderWidth: "2px",
-        borderColor: "#4f46e5",
-      },
-      contentStyle: {
-        color: "white",
-      },
-    };
-  }
-
-  return {
-    key: "selection",
-    dates: {
-      start: selectedDatesInternal.value[0],
-      end: selectedDatesInternal.value[1],
-    },
-    highlight: {
-      startStyle: {
-        backgroundColor: "#4f46e5",
-        borderRadius: "0",
-      },
-      endStyle: {
-        backgroundColor: "#4f46e5",
-        borderRadius: "0",
-      },
-      baseStyle: {
-        backgroundColor: "rgba(79, 70, 229, 0.2)",
-        borderRadius: "0",
-      },
-    },
-    contentStyle: {
-      color: "white",
-    },
-  };
-});
-
-// Handle day click
-const onDayClick = (day: { date: Date }) => {
-  // Check if the date is disabled (booked or manually disabled)
-  const dateStatus = getDateStatus(day.date);
-  if (dateStatus === DateStatusEnum.CLOSE) {
-    // Don't allow selection of disabled dates
-    return;
-  }
-
-  if (props.mode === "admin") {
-    // Check if we're in selection mode
-    // Use a default value of false if the injection key is not provided
-    const parentSelectionMode = inject<Ref<boolean>>('selectionMode', null);
-    const isSelectionMode = parentSelectionMode ? parentSelectionMode.value : false;
-    
-    if (isSelectionMode) {
-      // In selection mode, select/deselect date
-      const index = selectedDatesInternal.value.findIndex((d) =>
-        isSameDay(d, day.date)
-      );
-
-      if (index !== -1) {
-        // Date is already selected, deselect it
-        selectedDatesInternal.value.splice(index, 1);
-      } else {
-        // Date is not selected, select it
-        if (selectedDatesInternal.value.length >= 2) {
-          // If already have 2 dates, reset selection
-          selectedDatesInternal.value = [day.date];
-        } else {
-          // Add to selection
-          selectedDatesInternal.value.push(day.date);
-        }
-      }
-
-      // Sort selected dates
-      selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime());
-
-      // Emit selected dates
-      emit("update:selectedDates", selectedDatesInternal.value);
-    } else {
-      // In toggle mode, toggle date status
-      toggleDateStatus(day.date);
-      emit("dateStatusToggle", day.date);
-    }
-  } else {
-    // In booking mode (client), select/deselect date
-    const index = selectedDatesInternal.value.findIndex((d) =>
-      isSameDay(d, day.date)
-    );
-
-    if (index !== -1) {
-      // Date is already selected, deselect it
-      selectedDatesInternal.value.splice(index, 1);
-    } else {
-      // Date is not selected, select it
-      if (selectedDatesInternal.value.length >= 2) {
-        // If already have 2 dates, reset selection
-        selectedDatesInternal.value = [day.date];
-      } else {
-        // Add to selection
-        selectedDatesInternal.value.push(day.date);
-      }
-    }
-
-    // Sort selected dates
-    selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime());
-
-    // Emit selected dates
-    emit("update:selectedDates", selectedDatesInternal.value);
-  }
-};
-
-// Helper function to check if two dates are the same day
-function isSameDay(date1: Date, date2: Date): boolean {
-  return (
-    date1.getFullYear() === date2.getFullYear() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getDate() === date2.getDate()
-  );
-}
-
-// Helper function to check if a date is between two dates
-function isDateBetween(date: Date, start: Date, end: Date): boolean {
-  return date > start && date < end;
-}
 </script>
 
 
