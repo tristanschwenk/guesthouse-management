@@ -4,161 +4,287 @@
       <h2 class="text-lg font-semibold">{{ title }}</h2>
       <div class="flex space-x-2">
         <div class="flex items-center">
-          <div class="w-4 h-4 bg-open rounded-full mr-1"></div>
+          <div class="w-4 h-4 bg-green-500 rounded-full mr-1"></div>
           <span class="text-sm">Available</span>
         </div>
         <div class="flex items-center">
-          <div class="w-4 h-4 bg-close rounded-full mr-1"></div>
+          <div class="w-4 h-4 bg-red-500 rounded-full mr-1"></div>
           <span class="text-sm">Booked</span>
         </div>
         <div class="flex items-center">
-          <div class="w-4 h-4 bg-open-close rounded-full mr-1"></div>
-          <span class="text-sm">Check-in</span>
-        </div>
-        <div class="flex items-center">
-          <div class="w-4 h-4 bg-close-open rounded-full mr-1"></div>
-          <span class="text-sm">Check-out</span>
+          <div class="w-4 h-4 bg-orange-400 rounded-full mr-1"></div>
+          <span class="text-sm">Check-in/out</span>
         </div>
       </div>
     </div>
 
     <v-calendar
+      class="w-full"
       :attributes="calendarAttributes"
       :min-date="minDate"
       :max-date="maxDate"
       :disabled-dates="disabledDates"
       @dayclick="onDayClick"
-      is-expanded
-    >
-      <template #day-content="{ day, attributes }">
-        <DateCell
-          :date="day.date"
-          :status="getDayStatus(day.date)"
-          :booking="getDayBooking(day.date)"
-          :show-booking-info="showBookingInfo"
-        />
-      </template>
-    </v-calendar>
+      :is-expanded="true"
+      :is-range="true"
+      :select-attribute="selectAttribute"
+      :masks="{
+        title: 'MMMM YYYY',
+        weekdays: 'WWW',
+        navMonths: 'MMM',
+      }"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { DateStatus, Booking } from '~/types'
+import { ref, computed, onMounted, watch, inject, type Ref } from "vue";
+import type { DateStatus, Booking } from "~/types";
+import { DateStatus as DateStatusEnum } from "~/types";
 
 const props = defineProps<{
   roomId: string;
   title?: string;
-  mode?: 'admin' | 'booking';
+  mode?: "admin" | "booking";
   showBookingInfo?: boolean;
   minDate?: Date;
   maxDate?: Date;
   selectedDates?: Date[];
-}>()
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:selectedDates', dates: Date[]): void;
-  (e: 'dateStatusToggle', date: Date): void;
-}>()
+  (e: "update:selectedDates", dates: Date[]): void;
+  (e: "dateStatusToggle", date: Date): void;
+}>();
 
-const { 
-  disabledDates, 
-  roomBookings, 
-  getDateStatus, 
-  toggleDateStatus, 
-  init 
-} = useCalendar(props.roomId)
+const { disabledDates, roomBookings, getDateStatus, toggleDateStatus, init } =
+  useCalendar(props.roomId);
 
-const selectedDatesInternal = ref<Date[]>(props.selectedDates || [])
+const selectedDatesInternal = ref<Date[]>(props.selectedDates || []);
+const isInitialized = ref(false);
 
 // Initialize calendar data
 onMounted(async () => {
-  await init()
-})
+  await init();
+  isInitialized.value = true;
+});
 
-// Get the status for a specific day
-const getDayStatus = (date: Date): DateStatus => {
-  return getDateStatus(date)
-}
+// Watch for roomId changes and reinitialize
+watch(
+  () => props.roomId,
+  async (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      await init();
+    }
+  },
+  { immediate: false }
+);
 
-// Get booking for a specific day if it exists
-const getDayBooking = (date: Date): Booking | undefined => {
-  return roomBookings.value.find(booking => 
-    isSameDay(booking.checkIn, date) || 
-    isSameDay(booking.checkOut, date) || 
-    isDateBetween(date, booking.checkIn, booking.checkOut)
-  )
-}
+// Watch for selectedDates prop changes
+watch(
+  () => props.selectedDates,
+  (newDates) => {
+    if (newDates) {
+      selectedDatesInternal.value = [...newDates];
+    }
+  }
+);
+
+// Selection attribute for date range
+const selectAttribute = computed(() => {
+  if (selectedDatesInternal.value.length === 0) return null;
+
+  if (selectedDatesInternal.value.length === 1) {
+    return {
+      key: "selection",
+      dates: selectedDatesInternal.value[0],
+      highlight: {
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
+        borderWidth: "2px",
+        borderColor: "#4f46e5",
+      },
+      contentStyle: {
+        color: "white",
+      },
+    };
+  }
+
+  return {
+    key: "selection",
+    dates: {
+      start: selectedDatesInternal.value[0],
+      end: selectedDatesInternal.value[1],
+    },
+    highlight: {
+      startStyle: {
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
+      },
+      endStyle: {
+        backgroundColor: "#4f46e5",
+        borderRadius: "0",
+      },
+      baseStyle: {
+        backgroundColor: "rgba(79, 70, 229, 0.2)",
+        borderRadius: "0",
+      },
+    },
+    contentStyle: {
+      color: "white",
+    },
+  };
+});
 
 // Calendar attributes for v-calendar
 const calendarAttributes = computed(() => {
-  const attributes = []
-  
+  if (!isInitialized.value) return [];
+
+  const attributes = [];
+
   // Add attributes for each date status
   for (const booking of roomBookings.value) {
-    // Check-in date (OPEN_CLOSE)
+    const checkIn = new Date(booking.checkIn);
+    const checkOut = new Date(booking.checkOut);
+
+    // Check-in date (OPEN_CLOSE) and Check-out date (CLOSE_OPEN) - both orange
     attributes.push({
-      dates: booking.checkIn,
-      class: 'date-open-close'
-    })
-    
-    // Check-out date (CLOSE_OPEN)
+      key: `checkin-${booking.id}`,
+      dates: checkIn,
+      highlight: {
+        backgroundColor: "#fb923c", // orange-400
+        borderRadius: "0",
+      },
+      popover: {
+        label: `Check-in: ${booking.guestName}`,
+        visibility: props.showBookingInfo ? "hover" : "hidden",
+      },
+    });
+
     attributes.push({
-      dates: booking.checkOut,
-      class: 'date-close-open'
-    })
-    
-    // Dates between check-in and check-out (CLOSE)
-    attributes.push({
-      dates: { start: new Date(booking.checkIn.getTime() + 86400000), end: new Date(booking.checkOut.getTime() - 86400000) },
-      class: 'date-close'
-    })
+      key: `checkout-${booking.id}`,
+      dates: checkOut,
+      highlight: {
+        backgroundColor: "#fb923c", // orange-400
+        borderRadius: "0",
+      },
+      popover: {
+        label: `Check-out: ${booking.guestName}`,
+        visibility: props.showBookingInfo ? "hover" : "hidden",
+      },
+    });
+
+    // Dates between check-in and check-out (CLOSE) - red
+    if (checkOut.getTime() - checkIn.getTime() > 86400000) {
+      attributes.push({
+        key: `booked-${booking.id}`,
+        dates: {
+          start: new Date(checkIn.getTime() + 86400000),
+          end: new Date(checkOut.getTime() - 86400000),
+        },
+        highlight: {
+          backgroundColor: "#ef4444", // red-500
+          borderRadius: "0",
+        },
+        popover: {
+          label: `Booked: ${booking.guestName}`,
+          visibility: props.showBookingInfo ? "hover" : "hidden",
+        },
+      });
+    }
   }
-  
-  // Add attributes for manually disabled dates
+
+  // Add attributes for manually disabled dates - red
   for (const date of disabledDates.value) {
     attributes.push({
+      key: `disabled-${date.getTime()}`,
       dates: date,
-      class: 'date-close'
-    })
+      highlight: {
+        backgroundColor: "#ef4444", // red-500
+        borderRadius: "0",
+      },
+      popover: {
+        label: "Not available",
+        visibility: "hover",
+      },
+    });
   }
-  
-  // Add attributes for selected dates
-  for (const date of selectedDatesInternal.value) {
-    attributes.push({
-      dates: date,
-      class: 'selected-date'
-    })
-  }
-  
-  return attributes
-})
+
+  return attributes;
+});
 
 // Handle day click
 const onDayClick = (day: { date: Date }) => {
-  if (props.mode === 'admin') {
-    // In admin mode, toggle date status
-    toggleDateStatus(day.date)
-    emit('dateStatusToggle', day.date)
-  } else {
-    // In booking mode, select/deselect date
-    const index = selectedDatesInternal.value.findIndex(d => isSameDay(d, day.date))
+  // Check if the date is disabled (booked or manually disabled)
+  const dateStatus = getDateStatus(day.date);
+  if (dateStatus === DateStatusEnum.CLOSE) {
+    // Don't allow selection of disabled dates
+    return;
+  }
+
+  if (props.mode === "admin") {
+    // Check if we're in selection mode
+    // Use a default value of false if the injection key is not provided
+    const parentSelectionMode = inject<Ref<boolean>>('selectionMode', null);
+    const isSelectionMode = parentSelectionMode ? parentSelectionMode.value : false;
     
+    if (isSelectionMode) {
+      // In selection mode, select/deselect date
+      const index = selectedDatesInternal.value.findIndex((d) =>
+        isSameDay(d, day.date)
+      );
+
+      if (index !== -1) {
+        // Date is already selected, deselect it
+        selectedDatesInternal.value.splice(index, 1);
+      } else {
+        // Date is not selected, select it
+        if (selectedDatesInternal.value.length >= 2) {
+          // If already have 2 dates, reset selection
+          selectedDatesInternal.value = [day.date];
+        } else {
+          // Add to selection
+          selectedDatesInternal.value.push(day.date);
+        }
+      }
+
+      // Sort selected dates
+      selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime());
+
+      // Emit selected dates
+      emit("update:selectedDates", selectedDatesInternal.value);
+    } else {
+      // In toggle mode, toggle date status
+      toggleDateStatus(day.date);
+      emit("dateStatusToggle", day.date);
+    }
+  } else {
+    // In booking mode (client), select/deselect date
+    const index = selectedDatesInternal.value.findIndex((d) =>
+      isSameDay(d, day.date)
+    );
+
     if (index !== -1) {
       // Date is already selected, deselect it
-      selectedDatesInternal.value.splice(index, 1)
+      selectedDatesInternal.value.splice(index, 1);
     } else {
       // Date is not selected, select it
-      selectedDatesInternal.value.push(day.date)
+      if (selectedDatesInternal.value.length >= 2) {
+        // If already have 2 dates, reset selection
+        selectedDatesInternal.value = [day.date];
+      } else {
+        // Add to selection
+        selectedDatesInternal.value.push(day.date);
+      }
     }
-    
+
     // Sort selected dates
-    selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime())
-    
+    selectedDatesInternal.value.sort((a, b) => a.getTime() - b.getTime());
+
     // Emit selected dates
-    emit('update:selectedDates', selectedDatesInternal.value)
+    emit("update:selectedDates", selectedDatesInternal.value);
   }
-}
+};
 
 // Helper function to check if two dates are the same day
 function isSameDay(date1: Date, date2: Date): boolean {
@@ -166,26 +292,29 @@ function isSameDay(date1: Date, date2: Date): boolean {
     date1.getFullYear() === date2.getFullYear() &&
     date1.getMonth() === date2.getMonth() &&
     date1.getDate() === date2.getDate()
-  )
+  );
 }
 
 // Helper function to check if a date is between two dates
 function isDateBetween(date: Date, start: Date, end: Date): boolean {
-  return date > start && date < end
+  return date > start && date < end;
 }
 </script>
 
 <style scoped>
 .booking-calendar :deep(.vc-container) {
-  --vc-accent-600: theme('colors.indigo.600');
-  --vc-accent-500: theme('colors.indigo.500');
   border-radius: 0.5rem;
   border: 1px solid #e5e7eb;
+  width: 100%;
 }
 
-.booking-calendar :deep(.selected-date) {
-  background-color: rgba(79, 70, 229, 0.2);
-  border: 2px solid #4f46e5;
+.booking-calendar :deep(.vc-day) {
+  min-height: 40px;
+  position: relative;
+}
+
+.booking-calendar :deep(.vc-day-content) {
+  width: 100%;
+  height: 100%;
 }
 </style>
-

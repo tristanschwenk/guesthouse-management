@@ -5,10 +5,12 @@ export const useRooms = () => {
   const rooms = ref<Room[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const storage = useStorage();
+  const STORAGE_KEY = 'guesthouse_rooms';
 
-  // Mock data for development
-  const initMockRooms = () => {
-    rooms.value = [
+  // Initialize with default rooms if none exist in storage
+  const initDefaultRooms = () => {
+    const defaultRooms: Room[] = [
       {
         id: "1",
         name: "Deluxe Room",
@@ -40,6 +42,13 @@ export const useRooms = () => {
         amenities: ["Wi-Fi", "TV", "Air Conditioning", "Mini Bar"],
       },
     ];
+    
+    return defaultRooms;
+  };
+
+  // Save rooms to localStorage
+  const saveRooms = () => {
+    storage.setItem(STORAGE_KEY, rooms.value);
   };
 
   const fetchRooms = async () => {
@@ -47,9 +56,16 @@ export const useRooms = () => {
     error.value = null;
 
     try {
-      // In a real app, this would be an API call
-      // For now, we'll use mock data
-      initMockRooms();
+      // Get rooms from localStorage or use default if none exist
+      const storedRooms = storage.getItem<Room[]>(STORAGE_KEY, []);
+      
+      if (storedRooms.length === 0) {
+        // Initialize with default rooms if storage is empty
+        rooms.value = initDefaultRooms();
+        saveRooms(); // Save default rooms to storage
+      } else {
+        rooms.value = storedRooms;
+      }
     } catch (err) {
       error.value = "Failed to fetch rooms";
       console.error(err);
@@ -68,6 +84,7 @@ export const useRooms = () => {
       id: Date.now().toString(),
     };
     rooms.value.push(newRoom);
+    saveRooms(); // Save to localStorage
     return newRoom;
   };
 
@@ -75,6 +92,7 @@ export const useRooms = () => {
     const index = rooms.value.findIndex((room) => room.id === id);
     if (index !== -1) {
       rooms.value[index] = { ...rooms.value[index], ...updates };
+      saveRooms(); // Save to localStorage
       return rooms.value[index];
     }
     return null;
@@ -84,6 +102,7 @@ export const useRooms = () => {
     const index = rooms.value.findIndex((room) => room.id === id);
     if (index !== -1) {
       rooms.value.splice(index, 1);
+      saveRooms(); // Save to localStorage
       return true;
     }
     return false;
@@ -100,3 +119,4 @@ export const useRooms = () => {
     deleteRoom,
   };
 };
+

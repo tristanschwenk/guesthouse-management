@@ -115,6 +115,11 @@
       </div>
     </div>
     
+    <!-- Dashboard Calendar -->
+    <div class="mt-8">
+      <DashboardCalendar />
+    </div>
+    
     <!-- Recent Bookings -->
     <div class="mt-8">
       <h2 class="text-lg leading-6 font-medium text-gray-900">Recent Bookings</h2>
@@ -163,6 +168,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import DashboardCalendar from '~/components/admin/dashboard/DashboardCalendar.vue'
 
 definePageMeta({
   layout: 'admin'
