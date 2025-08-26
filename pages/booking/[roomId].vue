@@ -80,7 +80,7 @@
         
         <!-- Booking Form -->
         <div class="mt-8 lg:mt-0 col-span-2">
-          <BookingForm 
+          <BookingForm
             :roomId="roomId" 
             :room="room" 
             @booking-complete="handleBookingComplete" 
@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import BookingForm from '~/components/booking/BookingForm.vue'
 
 const route = useRoute()
 const router = useRouter()

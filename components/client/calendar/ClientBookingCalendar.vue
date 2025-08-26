@@ -46,14 +46,7 @@ const currentPage = ref(new Date());
 // Computed properties for v-calendar
 const disabledDates = computed(() => {
   const dates = [];
-  
-  // Add past dates
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  dates.push({
-    start: null,
-    end: new Date(today.getTime() - 86400000) // yesterday
-  });
+
   
   // Add booked dates
   for (const booking of props.bookings) {

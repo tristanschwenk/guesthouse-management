@@ -18,26 +18,23 @@
       </div>
     </div>
 
-    <v-calendar
+    <DatePicker
       class="w-full"
-      :attributes="calendarAttributes"
+      :columns="2"
       :min-date="minDate"
       :max-date="maxDate"
       :disabled-dates="disabledDates"
-      @dayclick="onDayClick"
-      :is-expanded="true"
-      :is-range="true"
-      :select-attribute="selectAttribute"
-      :masks="{
-        title: 'MMMM YYYY',
-        weekdays: 'WWW',
-        navMonths: 'MMM',
-      }"
+      :model-modifiers="{ range: true }"
+      :model-value="dateRange"
+      @update:model-value="updateValue"
+      mode="range"
+    
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import { DatePicker } from "v-calendar";
 import { ref, computed, onMounted, watch, inject, type Ref } from "vue";
 import type { DateStatus, Booking } from "~/types";
 import { DateStatus as DateStatusEnum } from "~/types";
@@ -62,6 +59,21 @@ const { disabledDates, roomBookings, getDateStatus, toggleDateStatus, init } =
 
 const selectedDatesInternal = ref<Date[]>(props.selectedDates || []);
 const isInitialized = ref(false);
+const dateRange = ref<{ start: Date; end: Date } | null>(null);
+
+const updateValue = (value: { start: Date; end: Date } | null) => {
+  console.log(value);
+  if (value) {
+    dateRange.value = value;
+  }
+}
+
+
+watchEffect(() => {
+    if (dateRange.value) {
+      console.log(dateRange.value);
+    }
+  })
 
 // Initialize calendar data
 onMounted(async () => {
@@ -134,83 +146,6 @@ const selectAttribute = computed(() => {
       color: "white",
     },
   };
-});
-
-// Calendar attributes for v-calendar
-const calendarAttributes = computed(() => {
-  if (!isInitialized.value) return [];
-
-  const attributes = [];
-
-  // Add attributes for each date status
-  for (const booking of roomBookings.value) {
-    const checkIn = new Date(booking.checkIn);
-    const checkOut = new Date(booking.checkOut);
-
-    // Check-in date (OPEN_CLOSE) and Check-out date (CLOSE_OPEN) - both orange
-    attributes.push({
-      key: `checkin-${booking.id}`,
-      dates: checkIn,
-      highlight: {
-        backgroundColor: "#fb923c", // orange-400
-        borderRadius: "0",
-      },
-      popover: {
-        label: `Check-in: ${booking.guestName}`,
-        visibility: props.showBookingInfo ? "hover" : "hidden",
-      },
-    });
-
-    attributes.push({
-      key: `checkout-${booking.id}`,
-      dates: checkOut,
-      highlight: {
-        backgroundColor: "#fb923c", // orange-400
-        borderRadius: "0",
-      },
-      popover: {
-        label: `Check-out: ${booking.guestName}`,
-        visibility: props.showBookingInfo ? "hover" : "hidden",
-      },
-    });
-
-    // Dates between check-in and check-out (CLOSE) - red
-    if (checkOut.getTime() - checkIn.getTime() > 86400000) {
-      attributes.push({
-        key: `booked-${booking.id}`,
-        dates: {
-          start: new Date(checkIn.getTime() + 86400000),
-          end: new Date(checkOut.getTime() - 86400000),
-        },
-        highlight: {
-          backgroundColor: "#ef4444", // red-500
-          borderRadius: "0",
-        },
-        popover: {
-          label: `Booked: ${booking.guestName}`,
-          visibility: props.showBookingInfo ? "hover" : "hidden",
-        },
-      });
-    }
-  }
-
-  // Add attributes for manually disabled dates - red
-  for (const date of disabledDates.value) {
-    attributes.push({
-      key: `disabled-${date.getTime()}`,
-      dates: date,
-      highlight: {
-        backgroundColor: "#ef4444", // red-500
-        borderRadius: "0",
-      },
-      popover: {
-        label: "Not available",
-        visibility: "hover",
-      },
-    });
-  }
-
-  return attributes;
 });
 
 // Handle day click
@@ -301,20 +236,4 @@ function isDateBetween(date: Date, start: Date, end: Date): boolean {
 }
 </script>
 
-<style scoped>
-.booking-calendar :deep(.vc-container) {
-  border-radius: 0.5rem;
-  border: 1px solid #e5e7eb;
-  width: 100%;
-}
 
-.booking-calendar :deep(.vc-day) {
-  min-height: 40px;
-  position: relative;
-}
-
-.booking-calendar :deep(.vc-day-content) {
-  width: 100%;
-  height: 100%;
-}
-</style>

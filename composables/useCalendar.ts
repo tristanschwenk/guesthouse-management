@@ -1,12 +1,23 @@
 import { ref, computed } from "vue";
 import type { Booking, CalendarDay } from "~/types";
 import { DateStatus } from "~/types";
+import { eachDayOfInterval } from "date-fns";
 
 export const useCalendar = (roomId: string) => {
   const { bookings, fetchBookings, getBookingsByRoom } = useBookings();
   const disabledDates = ref<Date[]>([]);
   const roomBookings = computed(() => getBookingsByRoom(roomId).value);
   const isLoading = ref(true);
+
+  const parseDisabledDates = () => {
+    const dates = [];
+    for (const booking of bookings.value) {
+      const checkIn = new Date(booking.checkIn);
+      const checkOut = new Date(booking.checkOut);
+      dates.push(eachDayOfInterval({ start: checkIn, end: checkOut }));
+    }
+    disabledDates.value = dates.flat();
+  }
 
   // Initialize with some mock disabled dates
   const initMockDisabledDates = () => {
@@ -135,7 +146,7 @@ export const useCalendar = (roomId: string) => {
   const init = async () => {
     isLoading.value = true;
     await fetchBookings();
-    initMockDisabledDates();
+    parseDisabledDates();
     isLoading.value = false;
   };
 

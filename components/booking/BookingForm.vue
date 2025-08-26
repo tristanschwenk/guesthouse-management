@@ -15,6 +15,7 @@
         mode="booking"
         v-model:selectedDates="selectedDates"
         :min-date="today"
+        :disabled-dates="disabledDates"
         title="Select Check-in and Check-out Dates"
       />
 
@@ -238,7 +239,7 @@ const emit = defineEmits<{
   (e: "bookingComplete"): void;
 }>();
 
-const { addBooking } = useBookings();
+const { addBooking, getBookingsByRoom } = useBookings();
 
 const step = ref(1);
 const selectedDates = ref<Date[]>([]);
@@ -249,6 +250,24 @@ const guestInfo = ref({
   email: "",
   phone: "",
   specialRequests: "",
+});
+
+const disabledDates = computed(() => {
+  const dates = [];
+
+  const bookings = getBookingsByRoom(props.roomId).value;
+  // Add booked dates
+  for (const booking of bookings) {
+    const checkInDate = new Date(booking.checkIn);
+    const checkOutDate = new Date(booking.checkOut);
+    
+    dates.push({
+      start: checkInDate,
+      end: checkOutDate
+    });
+  }
+  
+  return dates;
 });
 
 const roomPrice = computed(() => {
