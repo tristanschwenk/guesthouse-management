@@ -3,111 +3,266 @@
     <div class="mb-6">
       <h2 class="text-lg font-semibold mb-2">Room Availability</h2>
       <p class="text-gray-600">
-        Use the calendar below to manage room availability. Click on dates to toggle their status.
+        Use the calendar below to manage room availability. Click on dates to
+        toggle their status or select a date range to create a booking.
       </p>
-      
+
       <div class="mt-4 bg-yellow-50 border-l-4 border-yellow-400 p-4">
         <div class="flex">
           <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-              <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+            <svg
+              class="h-5 w-5 text-yellow-400"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                clip-rule="evenodd"
+              />
             </svg>
           </div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-yellow-800">Date Status Legend</h3>
+            <h3 class="text-sm font-medium text-yellow-800">
+              Date Status Legend
+            </h3>
             <div class="mt-2 text-sm text-yellow-700">
               <ul class="list-disc pl-5 space-y-1">
-                <li><span class="font-semibold">Green (OPEN):</span> Available for booking</li>
-                <li><span class="font-semibold">Red (CLOSE):</span> Not available for booking</li>
-                <li><span class="font-semibold">Yellow (OPEN_CLOSE):</span> Check-in day (morning available, afternoon booked)</li>
-                <li><span class="font-semibold">Blue (CLOSE_OPEN):</span> Check-out day (morning booked, afternoon available)</li>
+                <li>
+                  <span class="font-semibold">Green:</span> Available for
+                  booking
+                </li>
+                <li>
+                  <span class="font-semibold">Red:</span> Not available for
+                  booking
+                </li>
+                <li>
+                  <span class="font-semibold">Orange:</span>
+                  Check-in or Check-out day
+                </li>
               </ul>
             </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <BookingCalendar 
-      :roomId="roomId" 
-      :title="calendarTitle"
-      mode="admin"
-      :show-booking-info="true"
-      @dateStatusToggle="handleDateStatusToggle"
-    />
-    
-    <div class="mt-6">
-      <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
-      <div v-if="roomBookings.length === 0" class="text-gray-500">
-        No upcoming bookings for this room.
+
+    <div v-if="isLoading" class="flex justify-center my-8">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"
+      ></div>
+    </div>
+
+    <div v-else>
+      <div class="mb-4 flex justify-between items-center">
+        <div>
+          <span class="text-sm text-gray-500">
+            {{ selectionMode ? 'Selection mode: Click two dates to select a range' : 'Toggle mode: Click to toggle date availability' }}
+          </span>
+        </div>
+        <button
+          @click="toggleSelectionMode"
+          class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          {{ selectionMode ? 'Switch to Toggle Mode' : 'Switch to Selection Mode' }}
+        </button>
       </div>
-      <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
-        <ul class="divide-y divide-gray-200">
-          <li v-for="booking in roomBookings" :key="booking.id" class="px-4 py-4 sm:px-6">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-indigo-600 truncate">{{ booking.guestName }}</p>
-                <p class="mt-1 text-sm text-gray-500">
-                  {{ formatDate(booking.checkIn) }} to {{ formatDate(booking.checkOut) }}
-                </p>
+
+      <AdminBookingCalendar
+        class="w-full"
+        :bookings="roomBookings"
+        :isSelectionMode="selectionMode"
+        @dateToggled="handleDateStatusToggle"
+        @openBookingModal="handleOpenBookingModal"
+      />
+
+      <div v-if="selectedDates.length === 2" class="mt-4 p-4 bg-indigo-50 rounded-md">
+        <div class="flex justify-between items-center">
+          <div>
+            <p class="font-medium text-indigo-800">Selected Range: {{ formatDate(selectedDates[0]) }} to {{ formatDate(selectedDates[1]) }}</p>
+            <p class="text-sm text-indigo-600">{{ calculateNights() }} nights</p>
+          </div>
+          <button
+            @click="openCreateBookingModal"
+            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Create Booking
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <h3 class="text-md font-semibold mb-2">Upcoming Bookings</h3>
+        <div v-if="roomBookings.length === 0" class="text-gray-500">
+          No upcoming bookings for this room.
+        </div>
+        <div v-else class="bg-white shadow overflow-hidden sm:rounded-md">
+          <ul class="divide-y divide-gray-200">
+            <li
+              v-for="booking in roomBookings"
+              :key="booking.id"
+              class="px-4 py-4 sm:px-6"
+            >
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm font-medium text-indigo-600 truncate">
+                    {{ booking.guestName }}
+                  </p>
+                  <p class="mt-1 text-sm text-gray-500">
+                    {{ formatDate(booking.checkIn) }} to
+                    {{ formatDate(booking.checkOut) }}
+                  </p>
+                </div>
+                <div class="ml-2 flex-shrink-0 flex">
+                  <p
+                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
+                    :class="bookingStatusClass(booking.status)"
+                  >
+                    {{ booking.status }}
+                  </p>
+                </div>
               </div>
-              <div class="ml-2 flex-shrink-0 flex">
-                <p class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" :class="bookingStatusClass(booking.status)">
-                  {{ booking.status }}
-                </p>
-              </div>
-            </div>
-          </li>
-        </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
+
+    <!-- Create Booking Modal -->
+    <CreateBookingModal
+      :is-open="isModalOpen"
+      :room-id="roomId"
+      :selected-dates="selectedDates"
+      @close="closeCreateBookingModal"
+      @submit="handleCreateBooking"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
-import { DateStatus } from '~/types'
+import { computed, onMounted, ref, watch } from "vue";
+import AdminBookingCalendar from "./calendar/AdminBookingCalendar.vue";
+import CreateBookingModal from "./CreateBookingModal.vue";
+import type { Booking } from "~/types";
 
 const props = defineProps<{
   roomId: string;
   roomName?: string;
-}>()
+}>();
 
-const { roomBookings, fetchBookings } = useBookings()
+const { bookings, fetchBookings, addBooking } = useBookings();
+const { roomBookings, init, isLoading, disableDate } = useCalendar(props.roomId);
 
 const calendarTitle = computed(() => {
-  return props.roomName ? `${props.roomName} - Availability Calendar` : 'Room Availability Calendar'
-})
+  return props.roomName
+    ? `${props.roomName} - Availability Calendar`
+    : "Room Availability Calendar";
+});
+
+const selectedDates = ref<Date[]>([]);
+const selectionMode = ref(false);
+const isModalOpen = ref(false);
 
 onMounted(async () => {
-  await fetchBookings()
-})
+  await fetchBookings();
+  await init();
+});
+
+// Watch for roomId changes and reinitialize
+watch(
+  () => props.roomId,
+  async (newRoomId, oldRoomId) => {
+    if (newRoomId !== oldRoomId) {
+      await init();
+    }
+  },
+  { immediate: false }
+);
+
+const toggleSelectionMode = () => {
+  selectionMode.value = !selectionMode.value;
+  selectedDates.value = [];
+};
 
 const handleDateStatusToggle = (date: Date) => {
-  // This function is called when a date status is toggled in the calendar
-  console.log('Date status toggled:', date)
+  // Toggle date status
+  console.log("Date status toggled:", date);
   // In a real app, you would save this change to the backend
-}
+};
+
+const handleOpenBookingModal = (dates: Date[]) => {
+  if (dates.length > 0) {
+    selectedDates.value = dates;
+    openCreateBookingModal();
+  }
+};
+
+const openCreateBookingModal = () => {
+  if (selectedDates.value.length === 2) {
+    isModalOpen.value = true;
+  }
+};
+
+const closeCreateBookingModal = () => {
+  isModalOpen.value = false;
+};
+
+const handleCreateBooking = (bookingData: Partial<Booking> & { source: string, sourceDetails?: string }) => {
+  // Add the booking
+  const newBooking = addBooking(bookingData);
+  
+  // If source is 'disabled', also mark the dates as disabled
+  if (bookingData.source === 'disabled') {
+    const startDate = new Date(bookingData.checkIn as Date);
+    const endDate = new Date(bookingData.checkOut as Date);
+    
+    // Disable all dates in the range
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      disableDate(new Date(currentDate));
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+  }
+  
+  // Reset selection
+  selectedDates.value = [];
+  
+  // Refresh the calendar
+  init();
+};
+
+const calculateNights = (): number => {
+  if (selectedDates.value.length !== 2) return 0;
+
+  const start = new Date(selectedDates.value[0]);
+  const end = new Date(selectedDates.value[1]);
+
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return diffDays;
+};
 
 const formatDate = (date: Date): string => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
 const bookingStatusClass = (status: string): string => {
   switch (status) {
-    case 'confirmed':
-      return 'bg-green-100 text-green-800';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'cancelled':
-      return 'bg-red-100 text-red-800';
+    case "confirmed":
+      return "bg-green-100 text-green-800";
+    case "pending":
+      return "bg-yellow-100 text-yellow-800";
+    case "cancelled":
+      return "bg-red-100 text-red-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
-}
+};
 </script>
-

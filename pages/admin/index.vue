@@ -4,7 +4,7 @@
       <h1 class="text-lg font-medium leading-6 text-gray-900">Admin Dashboard</h1>
     </div>
     
-    <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
       <!-- Dashboard Cards -->
       <div class="bg-white overflow-hidden shadow rounded-lg">
         <div class="px-4 py-5 sm:p-6">
@@ -86,6 +86,38 @@
           </div>
         </div>
       </div>
+      
+      <div class="bg-white overflow-hidden shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <div class="flex items-center">
+            <div class="flex-shrink-0 bg-blue-500 rounded-md p-3">
+              <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            </div>
+            <div class="ml-5 w-0 flex-1">
+              <dl>
+                <dt class="text-sm font-medium text-gray-500 truncate">Customers</dt>
+                <dd>
+                  <div class="text-lg font-medium text-gray-900">{{ customers.length }}</div>
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-4 sm:px-6">
+          <div class="text-sm">
+            <NuxtLink to="/admin/customers" class="font-medium text-indigo-600 hover:text-indigo-500">
+              View all<span class="sr-only"> customers</span>
+            </NuxtLink>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Dashboard Calendar -->
+    <div class="mt-8">
+      <DashboardCalendar />
     </div>
     
     <!-- Stats Cards -->
@@ -258,6 +290,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted } from 'vue'
+import DashboardCalendar from '~/components/admin/dashboard/DashboardCalendar.vue'
 
 definePageMeta({
   layout: 'admin'
@@ -267,9 +300,10 @@ const { rooms, fetchRooms } = useRooms()
 const { bookings, fetchBookings } = useBookings()
 const { getRevenueChartOptions, getOccupancyChartOptions, getRoomDistributionChartOptions } = useCharts()
 
+const { customers, fetchCustomers } = useCustomers()
 
 onMounted(async () => {
-  await Promise.all([fetchRooms(), fetchBookings()])
+  await Promise.all([fetchRooms(), fetchBookings(), fetchCustomers()])
 })
 
 // Get active bookings (confirmed bookings that haven't ended yet)
@@ -388,4 +422,3 @@ const roomDistributionData = [
 const roomDistributionChartOptions = computed(() => getRoomDistributionChartOptions(roomDistributionData))
 const roomDistributionSeries = ref(roomDistributionData.map(item => item.value))
 </script>
-
