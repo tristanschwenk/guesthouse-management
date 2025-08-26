@@ -8,10 +8,9 @@ export default defineNuxtConfig({
     '~/assets/css/main.css'
   ],
   build: {
-    transpile: ['v-calendar']
+    transpile: ['v-calendar', 'vue3-apexcharts', 'apexcharts']
   },
   typescript: {
     strict: true
   }
 })
-

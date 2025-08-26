@@ -98,12 +98,12 @@
         <h2 class="text-lg font-medium text-gray-900 mb-4">Revenue Trend</h2>
         <p class="text-sm text-gray-500 mb-4">Monthly revenue over the last 6 months</p>
         <div class="h-64">
-          <div class="flex h-full items-end space-x-2">
-            <div v-for="(month, index) in revenueData" :key="index" class="flex-1 flex flex-col items-center">
-              <div class="w-full bg-black" :style="`height: ${(month.value / maxRevenue) * 100}%`"></div>
-              <div class="text-xs text-gray-500 mt-2">{{ month.label }}</div>
-            </div>
-          </div>
+          <apexchart
+            type="bar"
+            height="100%"
+            :options="revenueChartOptions"
+            :series="revenueChartSeries"
+          ></apexchart>
         </div>
       </div>
 
@@ -111,39 +111,13 @@
       <div class="bg-white p-6 rounded-lg shadow">
         <h2 class="text-lg font-medium text-gray-900 mb-4">Weekly Occupancy</h2>
         <p class="text-sm text-gray-500 mb-4">Occupancy rate by day of the week</p>
-        <div class="h-64 relative">
-          <svg viewBox="0 0 700 300" class="w-full h-full">
-            <!-- Y-axis labels -->
-            <text x="20" y="20" class="text-xs text-gray-500">100%</text>
-            <text x="20" y="80" class="text-xs text-gray-500">75%</text>
-            <text x="20" y="140" class="text-xs text-gray-500">50%</text>
-            <text x="20" y="200" class="text-xs text-gray-500">25%</text>
-            <text x="20" y="260" class="text-xs text-gray-500">0%</text>
-            
-            <!-- Line chart -->
-            <polyline
-              :points="weeklyOccupancyPoints"
-              fill="none"
-              stroke="black"
-              stroke-width="2"
-            />
-            
-            <!-- Data points -->
-            <circle v-for="(point, index) in weeklyOccupancyData" :key="index"
-              :cx="50 + index * 100"
-              :cy="260 - (point.value * 2.4)"
-              r="4"
-              fill="black"
-            />
-            
-            <!-- X-axis labels -->
-            <text v-for="(point, index) in weeklyOccupancyData" :key="`label-${index}`"
-              :x="50 + index * 100"
-              y="280"
-              text-anchor="middle"
-              class="text-xs text-gray-500"
-            >{{ point.label }}</text>
-          </svg>
+        <div class="h-64">
+          <apexchart
+            type="line"
+            height="100%"
+            :options="occupancyChartOptions"
+            :series="occupancyChartSeries"
+          ></apexchart>
         </div>
       </div>
     </div>
@@ -154,40 +128,13 @@
       <div class="bg-white p-6 rounded-lg shadow">
         <h2 class="text-lg font-medium text-gray-900 mb-2">Room Type Distribution</h2>
         <p class="text-sm text-gray-500 mb-4">Bookings by room type</p>
-        <div class="relative h-64">
-          <div class="absolute inset-0 flex items-center justify-center">
-            <svg viewBox="0 0 100 100" class="w-full h-full">
-              <!-- Pie chart segments -->
-              <circle cx="50" cy="50" r="40" fill="#6B7280" />
-              
-              <!-- Pie chart segments (would be dynamic in real implementation) -->
-              <path d="M50,50 L50,10 A40,40 0 0,1 85.6,67.8 Z" fill="#374151" />
-              <path d="M50,50 L85.6,67.8 A40,40 0 0,1 25.7,78.2 Z" fill="#111827" />
-              <path d="M50,50 L25.7,78.2 A40,40 0 0,1 14.4,32.2 Z" fill="#4B5563" />
-            </svg>
-          </div>
-          
-          <!-- Legend -->
-          <div class="absolute bottom-0 left-0 right-0">
-            <div class="flex flex-col space-y-2">
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-gray-800 mr-2"></div>
-                <span class="text-sm text-gray-600">Deluxe Suite 35%</span>
-              </div>
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-gray-600 mr-2"></div>
-                <span class="text-sm text-gray-600">Standard Room 28%</span>
-              </div>
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-gray-900 mr-2"></div>
-                <span class="text-sm text-gray-600">Executive Suite 15%</span>
-              </div>
-              <div class="flex items-center">
-                <div class="w-4 h-4 bg-gray-700 mr-2"></div>
-                <span class="text-sm text-gray-600">Family Lodge 22%</span>
-              </div>
-            </div>
-          </div>
+        <div class="h-64">
+          <apexchart
+            type="pie"
+            height="100%"
+            :options="roomDistributionChartOptions"
+            :series="roomDistributionSeries"
+          ></apexchart>
         </div>
       </div>
 
@@ -226,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 definePageMeta({
   layout: 'admin'
@@ -234,6 +181,7 @@ definePageMeta({
 
 const { rooms, fetchRooms } = useRooms()
 const { bookings, fetchBookings } = useBookings()
+const { getRevenueChartOptions, getOccupancyChartOptions, getRoomDistributionChartOptions } = useCharts()
 
 onMounted(async () => {
   await Promise.all([fetchRooms(), fetchBookings()])
@@ -325,7 +273,14 @@ const revenueData = [
   { label: 'Jun', value: 26000 }
 ]
 
-const maxRevenue = Math.max(...revenueData.map(item => item.value))
+// Revenue Chart Configuration
+const revenueChartOptions = computed(() => getRevenueChartOptions(revenueData))
+const revenueChartSeries = ref([
+  {
+    name: 'Revenue',
+    data: revenueData.map(item => item.value)
+  }
+])
 
 // Weekly occupancy data for chart
 const weeklyOccupancyData = [
@@ -338,13 +293,25 @@ const weeklyOccupancyData = [
   { label: 'Sun', value: 88 }
 ]
 
-// Generate points for the line chart
-const weeklyOccupancyPoints = computed(() => {
-  return weeklyOccupancyData.map((point, index) => {
-    const x = 50 + index * 100
-    const y = 260 - (point.value * 2.4) // Scale to fit in the SVG
-    return `${x},${y}`
-  }).join(' ')
-})
+// Occupancy Chart Configuration
+const occupancyChartOptions = computed(() => getOccupancyChartOptions(weeklyOccupancyData))
+const occupancyChartSeries = ref([
+  {
+    name: 'Occupancy',
+    data: weeklyOccupancyData.map(item => item.value)
+  }
+])
+
+// Room distribution data
+const roomDistributionData = [
+  { label: 'Deluxe Suite', value: 35 },
+  { label: 'Standard Room', value: 28 },
+  { label: 'Executive Suite', value: 15 },
+  { label: 'Family Lodge', value: 22 }
+]
+
+// Room Distribution Chart Configuration
+const roomDistributionChartOptions = computed(() => getRoomDistributionChartOptions(roomDistributionData))
+const roomDistributionSeries = ref(roomDistributionData.map(item => item.value))
 </script>
 
