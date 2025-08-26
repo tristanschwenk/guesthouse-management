@@ -1,11 +1,13 @@
 <template>
   <div class="admin-booking-calendar">
-    <v-calendar
+    <DatePicker
       :attributes="calendarAttributes"
       :min-date="new Date()"
       :is-range-mode="isSelectionMode"
       :select-attribute="selectAttribute"
-      @dayclick="handleDayClick"
+      :model-value="dateRange"
+      :model-modifiers="{ range: true }"
+      @update:model-value="updateValue"
       @update:from-page="updatePage"
     />
 
@@ -29,6 +31,7 @@
 import { ref, computed, watch } from "vue";
 import type { DateStatus, Booking } from "~/types";
 import { DateStatus as DateStatusEnum } from "~/types";
+import { DatePicker } from "v-calendar";
 
 const props = defineProps({
   bookings: {
@@ -46,6 +49,14 @@ const emit = defineEmits(['dateToggled', 'openBookingModal']);
 // Calendar state
 const selectedDates = ref<Date[]>([]);
 const currentPage = ref(new Date());
+const dateRange = ref<{ start: Date; end: Date } | null>(null);
+
+const updateValue = (value: { start: Date; end: Date } | null) => {
+  if (value) {
+    dateRange.value = value;
+    emit("openBookingModal", [value.start, value.end]);
+  }
+}
 
 // Computed properties for v-calendar
 const calendarAttributes = computed(() => {
