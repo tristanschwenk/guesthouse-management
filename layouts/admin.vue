@@ -11,6 +11,9 @@
               <NuxtLink to="/admin" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 Dashboard
               </NuxtLink>
+              <NuxtLink to="/admin/stats" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                Stats
+              </NuxtLink>
               <NuxtLink to="/admin/rooms" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 Rooms
               </NuxtLink>
@@ -38,4 +41,3 @@
     </main>
   </div>
 </template>
-
